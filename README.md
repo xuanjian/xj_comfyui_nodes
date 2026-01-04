@@ -59,7 +59,7 @@
 - **分类**: "XJ Nodes/Image"
 - **支持功能**: 图像编辑、风格迁移、物体增删、文字编辑、细节增强
 
-#### 7. WanxImageGenerationNode - 万相图像生成节点 ⭐新增
+#### 7. WanxImageGenerationNode - 万相图像生成节点
 - **功能**: 调用阿里云万相API进行AI绘画，支持文生图和图生图
 - **输入**:
   - prompt (字符串，图像描述)
@@ -78,6 +78,33 @@
 - **支持功能**: 文本生成图像、参考图片生成、多种尺寸和风格、负面提示词、批量生成
 - **详细文档**: [WANX_API_GUIDE.md](image/WANX_API_GUIDE.md)
 - **使用示例**: [wanx_image_generation_example.md](examples/wanx_image_generation_example.md)
+
+#### 8. SeedreamImageToImageNode - Seedream 图生图节点 ⭐新增
+- **功能**: 调用火山引擎 doubao-seedream-4.5 API 进行图生图，支持图像风格转换、内容编辑等
+- **API文档**: [火山引擎 Seedream 4.5 API](https://www.volcengine.com/docs/82379/1541523)
+- **输入**:
+  - image (图像，输入的原始图像，必需)
+  - prompt (字符串，图像描述提示词)
+  - api_key (字符串，火山引擎 ARK API 密钥)
+  - model (字符串，模型选择：doubao-seedream-4.5/doubao-seedream-4.0)
+  - strength (浮点数，变化强度0.0-1.0，默认0.5)
+  - size (字符串，输出尺寸：auto/1K/2K/4K等)
+  - seed (整数，随机种子，-1为随机)
+  - watermark (布尔值，是否添加水印)
+  - api_url (字符串，API地址，可选)
+  - optimize_prompt_mode (字符串，提示词优化：disabled/standard/fast，可选)
+- **输出**: 
+  - image (生成的图像)
+  - info (生成信息，包括耗时等)
+- **显示名**: "Seedream 图生图 (XJ)"
+- **分类**: "xj_nodes/image"
+- **支持功能**: 图像风格转换、AI 重绘、提示词优化、多种尺寸输出、随机种子控制
+- **特点**: 
+  - 支持 doubao-seedream-4.5 最新模型
+  - 可调节图像变化强度（strength参数）
+  - 支持提示词自动优化（4.5专属）
+  - 自动处理 Base64 图像编码
+  - 详细的日志输出和错误提示
 
 ### 大语言模型节点
 
@@ -185,6 +212,80 @@
 - **使用场景**:
   - 文本查询 + 网络搜索：查询最新信息并基于搜索结果回答
   - 图像 + 文本 + 网络搜索：分析图像内容，搜索相关信息，综合回答（需要支持视觉的模型，如GPT-4V、Qwen-VL等）
+
+#### 11. DoubaoVisionWebSearchNode - 豆包视觉+搜索节点 ⭐核心功能
+- **功能**: 集成火山引擎的图片理解和联网搜索功能，**支持图片理解后搜索网络信息**
+- **核心特性**: 
+  - ✅ **图片理解 + 联网搜索**：识别图片内容并搜索相关网络信息（如商品价格、建筑历史等）
+  - ✅ **无需额外API**：联网搜索使用火山引擎内置功能，无需SerpAPI等额外服务
+  - ✅ **多模态输入**：支持文本+图片的组合输入
+  - ✅ **灵活配置**：可选择是否启用联网搜索
+- **API文档**: 
+  - [联网内容插件](https://www.volcengine.com/docs/82379/1338552) ⭐ 核心功能文档
+  - [豆包大模型1.8](https://www.volcengine.com/docs/82379/2123228)
+  - [图片理解API](https://www.volcengine.com/docs/82379/1362931)
+  - [联网搜索](https://www.volcengine.com/docs/82379/1756990)
+- **快速入门**: [QUICK_START.md](llm/QUICK_START.md) ⚡ 5分钟快速上手
+- **详细指南**: [DOUBAO_VISION_GUIDE.md](llm/DOUBAO_VISION_GUIDE.md) 📚 完整使用指南
+- **模型参考**: [DOUBAO_MODELS.md](llm/DOUBAO_MODELS.md) 📋 模型列表
+- **输入**:
+  - input_text (字符串，输入文本/问题，必需)
+  - api_key (字符串，火山引擎 ARK API 密钥，必需)
+  - model (字符串，模型选择，必需，⚠️ 需要支持视觉的模型才能处理图片)
+  - enable_websearch (布尔值，是否启用联网搜索，必需)
+  - input_image (图像，输入图片，可选，⚠️ 需要支持视觉的模型)
+  - api_url (字符串，API地址，可选)
+  - temperature (浮点数，温度参数0.0-2.0，可选)
+  - max_tokens (整数，最大token数，可选)
+  - system_prompt (字符串，系统提示词，可选)
+- **输出**: 
+  - response (字符串，模型响应内容)
+  - search_results (字符串，搜索结果，如果启用了搜索)
+  - full_response (字符串，完整响应JSON)
+- **显示名**: "豆包视觉+搜索 (XJ)"
+- **分类**: "xj_nodes/llm"
+- **支持的模型**:
+  - ⚠️ **重要**: 必须使用支持视觉功能的模型才能处理图片输入！
+  - ✅ **推荐模型**:
+    - `doubao-seed-1.6-thinking` - 支持视觉理解和思考链
+    - `doubao-vision-pro` - 视觉专业版
+    - `doubao-seed-1.8` - 可能支持，需验证
+  - ❌ **不支持图片的模型**:
+    - `doubao-1-5-pro-32k-250115` 等纯文本模型
+  - 💡 **获取可用模型**:
+    1. 访问控制台：https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint
+    2. 查看"推理接入点"列表，找到支持图片理解的模型
+    3. 复制你的 endpoint ID（格式：`ep-xxxxxxxxxxxxx`）
+    4. 在节点的 `model` 参数中输入该 endpoint ID
+- **典型应用场景**:
+  - **图片理解 + 联网搜索**（核心功能）：
+    - 识别商品并搜索价格、购买链接
+    - 识别建筑并搜索历史文化信息
+    - 识别植物/动物并搜索百科知识
+  - **纯文本 + 联网搜索**：
+    - 查询最新新闻、热点事件
+    - 搜索实时天气、股票信息
+  - **纯图片理解**：
+    - 详细分析图片内容
+    - 图片中的文字识别
+  - **纯文本问答**：
+    - 常规文本问答（不需要最新信息）
+- **常见错误和解决**:
+  - ❌ **错误**: `llm model received multi-modal messages`
+    - **原因**: 使用了不支持视觉的模型但连接了图片
+    - **解决**: 使用 `doubao-seed-1.6-thinking` 等支持视觉的模型
+  - ❌ **错误**: `InvalidEndpointOrModel.NotFound`
+    - **原因**: 模型或 endpoint ID 不存在
+    - **解决**: 从控制台获取正确的 endpoint ID
+  - ❌ **错误**: 模型名称格式错误（如 `doubao-seed-1-8-251215`）
+    - **原因**: 使用了错误的模型名称格式
+    - **解决**: 使用正确格式（如 `doubao-seed-1.8`）或 endpoint ID
+- **特点**:
+  - 原生支持火山引擎联网搜索工具
+  - 无需额外的搜索API密钥（使用火山引擎内置搜索）
+  - 支持 performance_first 搜索模式
+  - 多模态输入，灵活组合
+  - 详细的日志输出和错误处理
 
 #### 使用方法
 
