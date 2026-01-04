@@ -51,18 +51,13 @@ class SeedreamImageToImageNode:
                 }),
                 "size": ([
                     "auto",
-                    "1K",
-                    "2K", 
-                    "4K",
-                    "1024x1024",
-                    "2048x2048",
-                    "1440x2560",
-                    "2560x1440",
-                    "2304x1728",
-                    "1728x2304",
-                    "2496x1664",
-                    "1664x2496",
-                    "3024x1296"
+                    "1:1",
+                    "1:2",
+                    "2:1",
+                    "4:5",
+                    "5:4",
+                    "16:9",
+                    "9:16"
                 ], {
                     "default": "auto"
                 }),
@@ -150,6 +145,23 @@ class SeedreamImageToImageNode:
             print(f"❌ 图片下载失败: {e}")
             return None
     
+    def convert_aspect_ratio_to_size(self, aspect_ratio):
+        """
+        将宽高比转换为具体的像素尺寸
+        返回格式: "WIDTHxHEIGHT"
+        """
+        aspect_ratio_map = {
+            "1:1": "1024x1024",
+            "1:2": "1024x2048",      # 竖版
+            "2:1": "2048x1024",      # 横版
+            "4:5": "1024x1280",      # 竖版
+            "5:4": "1280x1024",      # 横版
+            "16:9": "1920x1080",     # 横版
+            "9:16": "1080x1920"      # 竖版
+        }
+        
+        return aspect_ratio_map.get(aspect_ratio, aspect_ratio)
+    
     def generate(self, image, prompt, api_key, model, strength, size, seed, watermark,
                  api_url="https://ark.cn-beijing.volces.com/api/v3/images/generations",
                  optimize_prompt_mode="disabled"):
@@ -214,7 +226,13 @@ class SeedreamImageToImageNode:
             payload["seed"] = seed
         
         if size != "auto":
-            payload["size"] = size
+            # 如果是宽高比格式，转换为像素尺寸
+            if ":" in size:
+                actual_size = self.convert_aspect_ratio_to_size(size)
+                print(f"📐 宽高比 {size} 转换为像素尺寸: {actual_size}")
+                payload["size"] = actual_size
+            else:
+                payload["size"] = size
         
         # 提示词优化（仅 4.5 支持）
         if optimize_prompt_mode != "disabled" and "4.5" in model or "4-5" in model:
