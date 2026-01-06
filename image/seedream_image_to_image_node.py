@@ -149,15 +149,18 @@ class SeedreamImageToImageNode:
         """
         将宽高比转换为具体的像素尺寸
         返回格式: "WIDTHxHEIGHT"
+        
+        注意：Seedream API 要求图片尺寸至少 3,686,400 像素（约 1920x1920）
+        所有尺寸都需满足此要求
         """
         aspect_ratio_map = {
-            "1:1": "1024x1024",
-            "1:2": "1024x2048",      # 竖版
-            "2:1": "2048x1024",      # 横版
-            "4:5": "1024x1280",      # 竖版
-            "5:4": "1280x1024",      # 横版
-            "16:9": "1920x1080",     # 横版
-            "9:16": "1080x1920"      # 竖版
+            "1:1": "1920x1920",      # 3,686,400 像素 ✓
+            "1:2": "1920x3840",      # 7,372,800 像素 ✓ 竖版
+            "2:1": "3840x1920",      # 7,372,800 像素 ✓ 横版
+            "4:5": "1920x2400",      # 4,608,000 像素 ✓ 竖版
+            "5:4": "2400x1920",      # 4,608,000 像素 ✓ 横版
+            "16:9": "2560x1440",     # 3,686,400 像素 ✓ 横版
+            "9:16": "1440x2560"      # 3,686,400 像素 ✓ 竖版
         }
         
         return aspect_ratio_map.get(aspect_ratio, aspect_ratio)
@@ -170,9 +173,11 @@ class SeedreamImageToImageNode:
         """
         # 验证 API Key
         if not api_key or api_key.strip() == "":
-            error_msg = "❌ 错误: 请设置 API Key（环境变量 ARK_API_KEY 或在节点中输入）"
+            error_msg = "❌ 错误: API Key 为空，跳过接口调用"
             print(error_msg)
-            return (image, error_msg)
+            # 返回一个 1x1 的占位符图片（黑色）表示未生成图片
+            placeholder = torch.zeros((1, 1, 1, 3), dtype=torch.float32)
+            return (placeholder, error_msg)
         
         # 验证 API URL
         if not api_url or not (api_url.startswith("http://") or api_url.startswith("https://")):
